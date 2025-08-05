@@ -2,322 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TS Angel Forex AI</title>
+  <title>TS Angel Voice Assistant</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-      font-family: 'Arial', sans-serif;
-      color: white;
-      background: black;
-    }
-
-    canvas#starfield {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-    }
-
     body {
+      background: #000;
+      color: #00ffea;
+      font-family: Arial, sans-serif;
       text-align: center;
-      padding: 20px;
+      padding: 40px;
     }
-
     h1 {
-      color: #00ffe7;
-      animation: neon-flicker 1.5s infinite;
-    }
-
-    #timeDisplay {
-      font-size: 1.2rem;
       color: #ffcc00;
-      animation: neon-flicker 2s infinite;
     }
-
-    select, button {
-      padding: 12px 20px;
-      margin: 10px;
-      font-size: 1rem;
-      border-radius: 5px;
-      background-color: #111;
+    #output {
+      margin-top: 20px;
+      font-size: 1.2rem;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      background: #111;
       color: #00ffea;
       border: 2px solid #00ffea;
+      border-radius: 6px;
       cursor: pointer;
-      animation: glow-pulse 2s infinite;
     }
-
     button:hover {
-      background-color: #00ffea;
+      background: #00ffea;
       color: black;
-    }
-
-    iframe {
-      width: 100%;
-      height: 500px;
-      border: none;
-      margin-top: 25px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px #00ffe7;
-      animation: glow-pulse 3s infinite;
-    }
-
-    .signal-box {
-      margin-top: 25px;
-      background: #111;
-      padding: 20px;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      color: #ffcc00;
-      animation: glow-pulse 1.5s infinite;
-    }
-
-    .watermark {
-      margin-top: 40px;
-      font-size: 1.2rem;
-      color: #00ffe7;
-      animation: neon-flicker 2s infinite;
-    }
-
-    @keyframes neon-flicker {
-      0%, 100% { text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff; }
-      50% { text-shadow: 0 0 2px #0ff, 0 0 5px #0ff; }
-    }
-
-    @keyframes glow-pulse {
-      0%, 100% { box-shadow: 0 0 10px #00ffe7, 0 0 20px #00ffe7; }
-      50% { box-shadow: 0 0 5px #00ffe7, 0 0 10px #00ffe7; }
     }
   </style>
 </head>
 <body>
-
-  <canvas id="starfield"></canvas>
-
-  <h1>🚀 TS Angel Forex AI (BTC & GOLD)</h1>
-  <p id="timeDisplay">⏰ Current Indian Time: </p>
-
-  <select id="pairSelect">
-    <option value="BTCUSD">BTCUSD</option>
-    <option value="XAUUSD">XAUUSD</option>
-  </select>
-
-  <button onclick="playClick(); generateSignal()">📡 Generate Signal</button>
-  <button id="voiceBtn">🎙️ Tap to Talk</button>
-
-  <div class="signal-box" id="signalBox">🔍 Waiting for signal...</div>
-
-  <iframe id="tvChart"></iframe>
-
-  <div class="watermark">💡 Created by Trader Sumon</div>
-
-  <audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-click-1114.mp3"></audio>
-
-  <script>
-    const pairSelect = document.getElementById("pairSelect");
-    const tvChart = document.getElementById("tvChart");
-    const signalBox = document.getElementById("signalBox");
-    const timeDisplay = document.getElementById("timeDisplay");
-    const clickSound = document.getElementById("clickSound");
-    const voiceBtn = document.getElementById("voiceBtn");
-    let activeSignal = null;
-
-    function playClick() {
-      clickSound.play();
-    }
-
-    pairSelect.addEventListener("change", loadChart);
-
-    function loadChart() {
-      const symbol = pairSelect.value;
-      const tvSymbol = symbol === "BTCUSD" ? "BINANCE:BTCUSDT" : "OANDA:XAUUSD";
-      tvChart.src = `https://s.tradingview.com/widgetembed/?frameElementId=tvChart&symbol=${tvSymbol}&interval=5&theme=dark&style=1&timezone=Asia/Kolkata`;
-    }
-
-    async function fetchLivePrice(pair) {
-      try {
-        if (pair === "BTCUSD") {
-          const res = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
-          const data = await res.json();
-          return parseFloat(data.price);
-        } else {
-          const res = await fetch("https://api.metals.live/api/spot/gold");
-          const data = await res.json();
-          return parseFloat(data[0]); // Metal spot price
-        }
-      } catch (error) {
-        signalBox.innerHTML = "❌ Error fetching live price!";
-        console.error(error);
-        return null;
-      }
-    }
-
-    async function generateSignal() {
-      const now = new Date();
-      const pair = pairSelect.value;
-      const day = now.getDay();
-      const time = now.toLocaleTimeString("en-IN", { hour12: true });
-
-      if (activeSignal) {
-        signalBox.innerHTML = "⏳ Wait: A signal is already active!";
-        return;
-      }
-
-      if ((pair === "XAUUSD") && (day === 6 || day === 0)) {
-        signalBox.innerHTML = "⚠️ Gold market is closed today.";
-        return;
-      }
-
-      const price = await fetchLivePrice(pair);
-      if (!price) return;
-
-      const direction = Math.random() > 0.5 ? "BUY" : "SELL";
-      const entry = parseFloat(price.toFixed(2));
-      const sl = direction === "BUY" ? (entry - 70).toFixed(2) : (entry + 70).toFixed(2);
-      const tp1 = direction === "BUY" ? (entry + 50).toFixed(2) : (entry - 50).toFixed(2);
-      const tp2 = direction === "BUY" ? (entry + 100).toFixed(2) : (entry - 100).toFixed(2);
-      const modes = ["Swing", "Intraday", "Scalping"];
-      const mode = modes[Math.floor(Math.random() * modes.length)];
-
-      activeSignal = { pair, direction, entry, sl, tp1, tp2, time, mode, status: "Running" };
-
-      const text = `New signal for ${pair}. ${direction} at ${entry}. TP1 ${tp1}, TP2 ${tp2}, Stop loss ${sl}`;
-      speak(text);
-
-      signalBox.innerHTML = `
-        📊 ${pair}: <b>${direction}</b><br>
-        ⚙️ Mode: <b>${mode}</b><br>
-        🟡 Entry: ${entry}<br>
-        🎯 TP1: ${tp1} | TP2: ${tp2}<br>
-        🛑 SL: ${sl}<br>
-        🕒 Time: ${time}
-      `;
-
-      startLiveUpdate();
-    }
-
-    function updateTime() {
-      const now = new Date();
-      const time = now.toLocaleTimeString("en-IN", { hour12: true });
-      timeDisplay.textContent = `⏰ Current Indian Time: ${time}`;
-    }
-
-    function startLiveUpdate() {
-      const interval = setInterval(async () => {
-        if (!activeSignal) return clearInterval(interval);
-        const livePrice = await fetchLivePrice(activeSignal.pair);
-        if (!livePrice) return;
-
-        const { direction, entry, tp1, tp2, sl, mode } = activeSignal;
-        let statusMsg = `
-          📊 ${activeSignal.pair}: <b>${direction}</b><br>
-          ⚙️ Mode: <b>${mode}</b><br>
-          🟡 Entry: ${entry}<br>
-          🎯 TP1: ${tp1} | TP2: ${tp2}<br>
-          🛑 SL: ${sl}<br>
-          📍 Live Price: ${livePrice}<br>
-        `;
-
-        const hitTP1 = direction === "BUY" ? livePrice >= tp1 : livePrice <= tp1;
-        const hitTP2 = direction === "BUY" ? livePrice >= tp2 : livePrice <= tp2;
-        const hitSL = direction === "BUY" ? livePrice <= sl : livePrice >= sl;
-
-        if (hitTP2) {
-          statusMsg += "✅ TP2 Hit! Signal closed.";
-          speak("TP2 target hit. Trade closed.");
-          activeSignal = null;
-        } else if (hitTP1) {
-          statusMsg += "✅ TP1 Hit! Signal active.";
-          speak("TP1 target hit. Trade still running.");
-        } else if (hitSL) {
-          statusMsg += "❌ SL Hit! Signal closed.";
-          speak("Stop loss hit. Trade closed.");
-          activeSignal = null;
-        } else {
-          statusMsg += "📈 Trade is live...";
-        }
-
-        signalBox.innerHTML = statusMsg;
-      }, 5000);
-    }
-
-    setInterval(updateTime, 1000);
-    updateTime();
-    loadChart();
-
-    // Starfield
-    const canvas = document.getElementById('starfield');
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    for (let i = 0; i < 150; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 1.5,
-        speed: Math.random() * 0.5 + 0.2
-      });
-    }
-    function animateStars() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#00ffe7';
-      for (let s of stars) {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-        ctx.fill();
-        s.y += s.speed;
-        if (s.y > canvas.height) {
-          s.y = 0;
-          s.x = Math.random() * canvas.width;
-        }
-      }
-      requestAnimationFrame(animateStars);
-    }
-    animateStars();
-
-    // Voice System
-    const synth = window.speechSynthesis;
-    function speak(text) {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.pitch = 1;
-      utter.rate = 1;
-      utter.lang = 'en-US';
-      synth.speak(utter);
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    voiceBtn.addEventListener("click", () => {
-      recognition.start();
-      speak("I'm listening, say a command.");
-    });
-
-    recognition.onresult = (event) => {
-      const command = event.results[0][0].transcript.toLowerCase();
-      if (command.includes("generate")) {
-        generateSignal();
-      } else if (command.includes("btc")) {
-        pairSelect.value = "BTCUSD"; loadChart();
-        speak("Bitcoin selected");
-      } else if (command.includes("gold")) {
-        pairSelect.value = "XAUUSD"; loadChart();
-        speak("Gold selected");
-      } else {
-        speak("Sorry, I didn’t understand.");
-      }
-    };
-  </script>
+  <h1>🎤 TS Angel Voice AI</h1>
+  <p>Press the button and speak anything in Bangla, English, or Hindi</p>
+  <button onclick="startListening()">🎙️ Talk to Angel</button>
+  <p id="output">Waiting for your command...</p>
+  <script src="script.js"></script>
 </body>
 </html>
